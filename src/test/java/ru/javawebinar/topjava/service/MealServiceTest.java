@@ -1,6 +1,6 @@
 package ru.javawebinar.topjava.service;
 
-import org.junit.AssumptionViolatedException;
+import org.junit.AfterClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -17,7 +17,6 @@ import org.springframework.test.context.jdbc.SqlConfig;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import ru.javawebinar.topjava.model.Meal;
 import ru.javawebinar.topjava.util.exception.NotFoundException;
-import ru.javawebinar.topjava.web.meal.MealRestController;
 
 import java.time.LocalDate;
 import java.time.Month;
@@ -42,11 +41,7 @@ public class MealServiceTest {
 
     private static final Logger logger = LoggerFactory.getLogger(MealServiceTest.class);
 
-    private static void logInfo(Description description, String status, long nanos) {
-        String testName = description.getMethodName();
-        logger.info(String.format("Test %s %s, spent %d microseconds",
-                testName, status, TimeUnit.NANOSECONDS.toMicros(nanos)));
-    }
+    private static StringBuilder results = new StringBuilder();
 
     @Autowired
     private MealService service;
@@ -57,26 +52,21 @@ public class MealServiceTest {
     @Rule
     public Stopwatch stopwatch = new Stopwatch() {
         @Override
-        protected void succeeded(long nanos, Description description) {
-            logInfo(description, "succeeded", nanos);
-        }
-
-        @Override
-        protected void failed(long nanos, Throwable e, Description description) {
-            logInfo(description, "failed", nanos);
-        }
-
-        @Override
-        protected void skipped(long nanos, AssumptionViolatedException e, Description description) {
-            logInfo(description, "skipped", nanos);
-        }
-
-        @Override
         protected void finished(long nanos, Description description) {
-            logInfo(description, "finished", nanos);
+            String result = String.format("%-25s %7d", description.getMethodName(), TimeUnit.NANOSECONDS.toMillis(nanos));
+            results.append(result).append('\n');
+            logger.info(result + " ms\n");
         }
     };
 
+    @AfterClass
+    public static void printResult() {
+        logger.info("\n---------------------------------" +
+                "\nTest                 Duration, ms" +
+                "\n---------------------------------\n" +
+                results +
+                "---------------------------------\n");
+    }
 
     @Test
     public void testDelete() throws Exception {
